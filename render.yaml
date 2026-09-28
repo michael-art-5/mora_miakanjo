@@ -5,7 +5,8 @@ services:
     name: mora-miakanjo
     runtime: node
     plan: free
-    region: frankfurt
+    # Même région que la base Neon (AWS us-east-2, Ohio) : chaque requête SQL reste rapide
+    region: ohio
     # Les outils de compilation (Vite, TypeScript) sont des dépendances de développement : on les installe au build
     buildCommand: npm ci --include=dev && npm run build
     startCommand: npm start

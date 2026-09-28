@@ -26,7 +26,9 @@ let backendPromise = null
 async function createBackend() {
   if (process.env.DATABASE_URL) {
     const pool = new pg.Pool({
-      connectionString: process.env.DATABASE_URL,
+      // sslmode=require (chaîne Neon) équivaut déjà à verify-full dans « pg » : on l'écrit explicitement
+      // pour garder la vérification complète du certificat et éviter l'avertissement de dépréciation.
+      connectionString: process.env.DATABASE_URL.replace(/sslmode=(require|prefer|verify-ca)\b/, 'sslmode=verify-full'),
       max: Number(process.env.DB_POOL_MAX) || 10,
       idleTimeoutMillis: 30_000,
     })
