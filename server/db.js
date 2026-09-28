@@ -23,18 +23,43 @@ pg.types.setTypeParser(DATE, (v) => v)
 
 let backendPromise = null
 
+// Nettoie la chaîne de connexion telle qu'elle est souvent collée : espaces, guillemets,
+// ou commande complète copiée depuis Neon (« psql 'postgresql://…' »). N'affiche jamais la valeur.
+function databaseUrl() {
+  const raw = process.env.DATABASE_URL
+  if (!raw || !raw.trim()) return null
+  const cleaned = raw
+    .trim()
+    .replace(/^psql\s+/i, '')
+    .replace(/^['"]+|['"]+$/g, '')
+    .trim()
+  let url
+  try {
+    url = new URL(cleaned)
+  } catch {
+    throw new Error(
+      `DATABASE_URL n'est pas une adresse valide (${cleaned.length} caractères, ` +
+        `${/^postgres(ql)?:\/\//.test(cleaned) ? 'commence bien par postgresql://' : 'ne commence pas par postgresql://'}). ` +
+        'Collez la chaîne Neon seule, sans guillemets, au format postgresql://utilisateur:motdepasse@hote/base?sslmode=require',
+    )
+  }
+  if (!/^postgres(ql)?:$/.test(url.protocol)) throw new Error('DATABASE_URL doit commencer par postgresql:// (chaîne de connexion Neon)')
+  return { value: cleaned, host: url.hostname }
+}
+
 async function createBackend() {
-  if (process.env.DATABASE_URL) {
+  const conn = databaseUrl()
+  if (conn) {
     const pool = new pg.Pool({
       // sslmode=require (chaîne Neon) équivaut déjà à verify-full dans « pg » : on l'écrit explicitement
       // pour garder la vérification complète du certificat et éviter l'avertissement de dépréciation.
-      connectionString: process.env.DATABASE_URL.replace(/sslmode=(require|prefer|verify-ca)\b/, 'sslmode=verify-full'),
+      connectionString: conn.value.replace(/sslmode=(require|prefer|verify-ca)\b/, 'sslmode=verify-full'),
       max: Number(process.env.DB_POOL_MAX) || 10,
       idleTimeoutMillis: 30_000,
     })
     const run = (client) => (text, values) => client.query(text, values).then((r) => r.rows)
     return {
-      label: `PostgreSQL (${new URL(process.env.DATABASE_URL).hostname})`,
+      label: `PostgreSQL (${conn.host})`,
       query: run(pool),
       exec: (text) => pool.query(text),
       async transaction(fn) {
