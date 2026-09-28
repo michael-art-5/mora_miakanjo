@@ -1,0 +1,21 @@
+# Déploiement sur Render (https://render.com) — « New > Blueprint » à partir du dépôt GitHub.
+# La base de données est hébergée chez Neon (PostgreSQL gratuit) : renseigner DATABASE_URL à la création.
+services:
+  - type: web
+    name: mora-miakanjo
+    runtime: node
+    plan: free
+    region: frankfurt
+    # Les outils de compilation (Vite, TypeScript) sont des dépendances de développement : on les installe au build
+    buildCommand: npm ci --include=dev && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: "24"
+      - key: NODE_ENV
+        value: production
+      - key: TRUST_PROXY
+        value: "1"
+      - key: DATABASE_URL
+        sync: false

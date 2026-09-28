@@ -1,0 +1,31 @@
+@import 'tailwindcss';
+
+/* Palette et typographies : voir identite-visuelle/Charte-graphique-MORA-MIAKANJO.docx */
+@theme {
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-display: 'Montserrat', 'Century Gothic', sans-serif;
+
+  --color-ink: #1b2438; /* Bleu Nuit */
+  --color-gold: #c49a5c; /* Or Miakanjo */
+  --color-sand: #e8d6b3; /* Sable */
+  --color-earth: #7a4e2d; /* Terre */
+  --color-cream: #faf7f2; /* Blanc Lin */
+  --color-slate: #5b6275; /* Gris Ardoise */
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  @apply bg-cream font-sans text-ink antialiased;
+}
+
+h1,
+h2 {
+  font-weight: 700;
+}
+
+.motif-textile {
+  background: url('/motif-textile.svg') center / auto 100% repeat-x;
+}
